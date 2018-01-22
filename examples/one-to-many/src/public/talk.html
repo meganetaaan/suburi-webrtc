@@ -9,14 +9,15 @@
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 </head>
 <body>
-  <button type="button" onclick="startVideo();">Start video</button>
-  <button type="button" onclick="stopVideo();">Stop video</button>
+  <button id="startVideoButton" type="button" onclick="startVideo();">Start video</button>
+  <button id="stopVideoButton" type="button" onclick="stopVideo();">Stop video</button>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <button type="button" onclick="tellReady();">On Air</button>
+  <button id="tellReadyButton" type="button" onclick="tellReady();">On Air</button>
   <br />
   <div style="position: relative;">
    <video id="local-video" autoplay style="width: 240px; height: 180px; border: 1px solid black;"></video>
   </div>
+  <div id="comment"></div>
   
   <!---- socket ※自分のシグナリングサーバーに合わせて変更してください------>
   <script src="http://localhost:9001/socket.io/socket.io.js"></script>
@@ -233,6 +234,7 @@
   // ---------------------- video handling -----------------------
   // start local video
   function startVideo() {
+    document.getElementById('comment').innerText = 'hoge'; 
     navigator.webkitGetUserMedia({video: true, audio: true},
       function (stream) { // success
         localStream = stream;
