@@ -1,6 +1,12 @@
 <template>
   <div class="web-rtc-client">
-   <video ref="video" autoplay style=""></video>
+   <video ref="localVideo" autoplay style=""></video>
+   <video ref="remoteVideo" autoplay style=""></video>
+   <div>{{myId}}</div>
+   <input v-model="peerId" placeholder="peer id">
+   <input type="button"
+   val="start"
+   @click="onClick" />
   </div>
 </template>
 
@@ -8,21 +14,35 @@
 import config from '../assets/config'
 import Peer from 'peerjs'
 
-const peer = new Peer({
-  key: config.apiKey
-})
+const peer = new Peer({ key: config.apiKey })
 
 export default {
   name: 'WebRtcClient',
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      msg: 'Welcome to Your Vue.js App',
+      peerId: '',
+      myId: ''
     }
   },
   mounted () {
     this.startVideoStream()
     peer.on('open', id => {
       console.log('My peer ID is: ' + id)
+      this.myId = id
+    })
+    peer.on('call', call => {
+      // Answer the call, providing our mediaStream
+      call.answer(this.$refs.localVideo.srcObject)
+      call.on('stream', stream => {
+        this.$refs.remoteVideo.srcObject = stream
+      })
+      call.on('close', stream => {
+        this.$refs.remoteVideo.srcObject = null
+      })
+    })
+    peer.on('stream', stream => {
+      this.$refs.remoteVideo.srcObject = stream
     })
   },
   methods: {
@@ -31,7 +51,18 @@ export default {
         video: true,
         audio: false
       })
-      this.$refs.video.srcObject = stream
+      this.$refs.localVideo.srcObject = stream
+    },
+    onClick () {
+      console.debug('clicked')
+      this.connect()
+    },
+    async connect () {
+      const peerId = this.peerId
+      const call = peer.call(peerId, this.$refs.localVideo.srcObject)
+      call.on('stream', stream => {
+        this.$refs.remoteVideo.srcObject = stream
+      })
     }
   }
 }
