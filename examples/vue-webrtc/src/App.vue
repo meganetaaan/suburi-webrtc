@@ -1,17 +1,17 @@
 <template>
   <div id="app">
     <img src="./assets/logo.png">
-    <HelloWorld/>
+    <WebRtcClient/>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld'
+import WebRtcClient from './components/WebRtcClient'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    WebRtcClient
   }
 }
 </script>
