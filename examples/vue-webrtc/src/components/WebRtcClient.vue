@@ -1,12 +1,12 @@
 <template>
   <div class="web-rtc-client">
-   <video v-if="localStream" ref="localVideo" autoplay style=""></video>
-   <template v-for="s of streams">
-    <video :key="s.id" :ref="s.id" autoplay style=""></video>
-   </template>
-   <div>{{myId}}</div>
-   <input v-model="peerId" placeholder="peer id">
-   <button value="start" @click="onClick">Call</button>
+    <video v-if="localStream" ref="localVideo" autoplay style=""></video>
+    <template v-for="s of streams">
+      <video :key="s.id" :ref="s.id" autoplay style=""></video>
+    </template>
+    <div>id: {{myId}}</div>
+    <input v-model="peerId" placeholder="peer id">
+    <button @click="onClick">Call</button>
   </div>
 </template>
 
@@ -24,32 +24,17 @@ export default {
       peerId: '',
       myId: '',
       localStream: null,
-      remoteStream: null,
       streams: []
     }
   },
   mounted () {
     this.startVideoStream()
     peer.on('open', id => {
-      console.log('My peer ID is: ' + id)
       this.myId = id
     })
     peer.on('call', call => {
-      // Answer the call, providing our mediaStream
       call.answer(this.localStream)
-      call.on('stream', stream => {
-        this.streams.push(stream)
-        // this.remoteStream = stream
-        // this.$refs.remoteVideo.srcObject = stream
-      })
-      call.on('close', stream => {
-        // this.remoteStream = null
-        // this.$refs.remoteVideo.srcObject = null
-      })
-    })
-    peer.on('stream', stream => {
-      this.streams.push(stream)
-      // this.remoteStream = stream
+      this.setupCall(call)
     })
   },
   watch: {
@@ -58,11 +43,6 @@ export default {
         this.$refs.localVideo.srcObject = this.localStream
       })
     },
-    // remoteStream () {
-    //   this.$nextTick(() => {
-    //     this.$refs.remoteVideo.srcObject = this.localStream
-    //   })
-    // }
     streams () {
       this.$nextTick(() => {
         for (let s of this.streams) {
@@ -79,17 +59,30 @@ export default {
       })
       this.localStream = stream
     },
+    setupCall (call) {
+      const vm = this
+      call.on('stream', stream => {
+        // add received stream
+        vm.streams.push(stream)
+      })
+      call.on('close', () => {
+        // remove closed stream
+        const closedStream = this.remoteStream
+        const idx = this.streams.indexOf(closedStream)
+        vm.streams.splice(idx, 1)
+      })
+    },
     onClick () {
-      console.debug('clicked')
       this.connect()
     },
     async connect () {
       const peerId = this.peerId
-      const call = peer.call(peerId, this.$refs.localVideo.srcObject)
-      call.on('stream', stream => {
-        this.remoteStream = stream
-        this.streams.push(stream)
-      })
+      if (peerId == null) {
+        console.warn('peerId is empty')
+        return
+      }
+      const call = peer.call(peerId, this.localStream)
+      this.setupCall(call)
     }
   }
 }
@@ -100,6 +93,5 @@ export default {
 video {
   width: 240px;
   height: 180px;
-  border: 1px solid black;
 }
 </style>
